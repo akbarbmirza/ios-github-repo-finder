@@ -9,6 +9,11 @@
 import UIKit
 import MBProgressHUD
 
+protocol SettingsPresentingViewControllerDelegate: class {
+    func didSaveSettings(settings: GithubRepoSearchSettings)
+    func didCancelSettings()
+}
+
 // Main ViewController
 class RepoResultsViewController: UIViewController {
 
@@ -20,6 +25,7 @@ class RepoResultsViewController: UIViewController {
     // Properties
     //--------------------------------------------------------------------------
     var searchBar: UISearchBar!
+    var defaultSearchSettings = GithubRepoSearchSettings()
     var searchSettings = GithubRepoSearchSettings()
     
     var repos: [GithubRepo]!
@@ -72,6 +78,18 @@ class RepoResultsViewController: UIViewController {
             }, error: { (error) -> Void in
                 print(error)
         })
+    }
+    
+    // MARK: - Navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Get the new view controller using segue.destinationViewController.
+        // Pass the selected object to the new view controller.
+        
+        let navController = segue.destination as! UINavigationController
+        let viewController = navController.topViewController as! SearchSettingsViewController
+        // Search Settings
+        viewController.settings = self.searchSettings
+        viewController.delegate = self
     }
 }
 
@@ -128,5 +146,23 @@ extension RepoResultsViewController: UITableViewDataSource, UITableViewDelegate 
         return cell
         
     }
+    
+}
+
+extension RepoResultsViewController: SettingsPresentingViewControllerDelegate {
+
+    func didSaveSettings(settings: GithubRepoSearchSettings) {
+        self.searchSettings = settings
+        doSearch()
+    }
+    
+    func didCancelSettings() {
+        // do nothing
+        if self.searchSettings.minStars != defaultSearchSettings.minStars {
+            self.searchSettings = defaultSearchSettings
+            doSearch()
+        }
+    }
+
     
 }
